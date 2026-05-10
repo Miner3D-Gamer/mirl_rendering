@@ -1,0 +1,83 @@
+[package]
+name = "mirl_rendering"
+version = "0.0.0-alpha"
+edition.workspace = true
+readme.workspace = true
+repository.workspace = true
+
+[dependencies]
+
+mirl_extensions = { version = "0.0.0-alpha" }
+mirl_core = { version = "0.0.0-alpha" }
+mirl = { version = "10.0.0-alpha" }
+mirl_math = { version = "0.0.0-alpha" }
+
+mirl_derive = { version = "0.0.0-alpha", optional = true }
+# Codec
+compactly = { version = "0.1.6", optional = true }
+serde = { version = ">=1.0", optional = true, default-features = false, features = [
+    "derive",
+] }
+bitcode = { version = "0.6.9", optional = true, default-features = false, features = [
+    "derive",
+] }
+wincode = { version = "0.4.5", optional = true, default-features = false, features = [
+    "derive",
+] }
+zerocopy = { version = "0.8.48", optional = true, default-features = false, features = [
+    "float-nightly",
+    "derive",
+] }
+
+# # Enum functionality
+# strum = { version = ">=0.28", optional = true, default-features = false, features = [
+#     "derive",
+# ] }
+# enum_ext = { version = "0.5.2", optional = true, default-features = false }
+
+
+# Text rendering
+## Needed for glyph cache
+once_cell = { version = ">=1.4", optional = true, default-features = false }
+## Font lib
+fontdue = { version = ">=0.9.3", optional = true, default-features = false }
+# For locking/releasing a global variable
+# TODO: Find something even faster for this application rather than this general purpose crate
+parking_lot = { version = ">=0.12.5", optional = true, default-features = false }
+
+[features]
+default = ["std"]
+std = []
+all = ["all_codecs"]
+
+# Does nothing by itself. Needs another codec or enum flag to do something
+mirl_derive = ["dep:mirl_derive"]
+# Compatibility with ffi
+c_compatible = ["mirl_derive"]
+# Enables all codecs
+all_codecs = ["serde", "bitcode", "wincode", "compactly", "zerocopy"]
+# # All enum extensions
+# all_enum_extensions = ["strum", "enum_ext"]
+
+# Codec stuff
+serde = ["dep:serde", "mirl_derive", "mirl_core/serde"]
+bitcode = ["dep:bitcode", "mirl_derive", "mirl_core/bitcode"]
+wincode = ["dep:wincode", "mirl_derive", "mirl_core/wincode"]
+compactly = ["dep:compactly", "mirl_derive", "mirl_core/compactly"]
+zerocopy = ["dep:zerocopy", "mirl_derive", "mirl_core/zerocopy"]
+
+# # Enum extensions
+# strum = ["dep:strum", "mirl_derive"]
+# enum_ext = ["dep:enum_ext", "mirl_derive"]
+# Font/fontdue support
+font_support = [
+    "dep:fontdue",
+    "dep:once_cell",
+    # "dep:font-kit",
+    "std",
+    "dep:parking_lot",
+]
+[lints]
+workspace = true
+[build-dependencies]
+mirl_build_tools = { workspace = true }
