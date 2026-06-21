@@ -1,5 +1,5 @@
 // use crate::graphics::interpolate_color_rgb_u32_f32;
-use mirl_core::render::traits::*;
+use mirl_buffer::traits::*;
 #[allow(unused_imports)]
 use mirl_extensions::*;
 

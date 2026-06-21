@@ -1,9 +1,12 @@
 #![allow(clippy::similar_names)]
 #![allow(clippy::significant_drop_tightening)]
+use mirl_buffer::{draw_pixel_safe, draw_pixel_unsafe};
+use mirl_buffer::traits::*;
+
 use super::get_character;
-use crate::render::{
-    BufferMetrics, BufferPointers, draw_pixel_safe, draw_pixel_unsafe,
-};
+// use crate::render::{
+//     BufferMetrics, BufferPointers, draw_pixel_safe, draw_pixel_unsafe,
+// };
 /// Draw text in the specified font
 pub fn draw_text<const SAFE: bool>(
     buffer: &mut (impl BufferPointers + BufferMetrics),

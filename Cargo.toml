@@ -2,7 +2,6 @@
 name = "mirl_rendering"
 version = "0.0.0-alpha"
 edition.workspace = true
-readme.workspace = true
 repository.workspace = true
 
 [dependencies]
@@ -10,7 +9,9 @@ repository.workspace = true
 mirl_extensions = { version = "0.0.0-alpha" }
 mirl_core = { version = "0.0.0-alpha" }
 mirl = { version = "10.0.0-alpha" }
-mirl_math = { version = "0.0.0-alpha" }
+mirl_buffer = { version = "0.0.0-alpha" }
+mirl_graphics = { version = "0.0.0-alpha" }
+mirl_buffer_interpolation = { version = "0.0.0-alpha" }
 
 mirl_derive = { version = "0.0.0-alpha", optional = true }
 # Codec
@@ -21,9 +22,7 @@ serde = { version = ">=1.0", optional = true, default-features = false, features
 bitcode = { version = "0.6.9", optional = true, default-features = false, features = [
     "derive",
 ] }
-wincode = { version = "0.4.5", optional = true, default-features = false, features = [
-    "derive",
-] }
+wincode = { version = "0.5.3", optional = true, features = ["derive"] }
 zerocopy = { version = "0.8.48", optional = true, default-features = false, features = [
     "float-nightly",
     "derive",
@@ -33,7 +32,7 @@ zerocopy = { version = "0.8.48", optional = true, default-features = false, feat
 # strum = { version = ">=0.28", optional = true, default-features = false, features = [
 #     "derive",
 # ] }
-# enum_ext = { version = "0.5.2", optional = true, default-features = false }
+# enum_ext = { version = "0.6.0", optional = true, default-features = false }
 
 
 # Text rendering
@@ -48,7 +47,7 @@ parking_lot = { version = ">=0.12.5", optional = true, default-features = false 
 [features]
 default = ["std"]
 std = []
-all = ["all_codecs"]
+all = ["all_codecs", "font_support"]
 
 # Does nothing by itself. Needs another codec or enum flag to do something
 mirl_derive = ["dep:mirl_derive"]
@@ -77,6 +76,7 @@ font_support = [
     "std",
     "dep:parking_lot",
 ]
+_checking = ["font_support"]
 [lints]
 workspace = true
 [build-dependencies]

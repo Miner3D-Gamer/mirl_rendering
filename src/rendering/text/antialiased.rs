@@ -1,18 +1,16 @@
 #![allow(clippy::similar_names, clippy::cast_possible_wrap)]
 #![allow(clippy::significant_drop_tightening)]
 
+use mirl_buffer::{draw_pixel_safe, draw_pixel_unsafe, traits::*};
+
 use super::get_character;
-use crate::render::{
-    BufferGetPixel, BufferMetrics, BufferMisc, BufferPointers, draw_pixel_safe,
-    draw_pixel_unsafe,
-};
 
 #[allow(clippy::cast_precision_loss)]
 #[allow(clippy::cast_possible_truncation)]
 #[allow(clippy::cast_sign_loss)]
 /// Draw text in the specified font
 pub fn draw_text_antialiased<const SAFE: bool>(
-    buffer: &mut (impl BufferPointers + BufferMetrics + BufferMisc),
+    buffer: &mut (impl BufferPointers + BufferMetrics),
     text: &str,
     xy: (usize, usize),
     color: u32,
@@ -292,7 +290,7 @@ pub fn draw_text_antialiased_stretched<const SAFE: bool>(
 
 /// Same as [`draw_text_antialiased`] but uses isize for positioning allowing for partially out of bounds text (left and top)
 pub fn draw_text_antialiased_isize<const SAFE: bool>(
-    buffer: &mut (impl BufferPointers + BufferMetrics + BufferMisc),
+    buffer: &mut (impl BufferPointers + BufferMetrics),
     text: &str,
     xy: (isize, isize),
     color: u32,

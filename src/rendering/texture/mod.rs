@@ -1,9 +1,9 @@
+use mirl_buffer::prelude::*;
 #[cfg(feature = "std")]
-use mirl::{Buffer, graphics::interpolation::InterpolationMode};
-use mirl_core::render::traits::*;
+use mirl_buffer_interpolation::InterpolationMode;
 use mirl_extensions::InterpolateColorBetween;
+use mirl_graphics::u32_color_casting::ColorManipulationWithoutInput;
 
-use crate::prelude::BufferCollision;
 #[cfg(feature = "std")]
 use crate::prelude::ResizeBuffer;
 #[allow(clippy::cast_sign_loss)]
@@ -36,80 +36,80 @@ pub fn draw_buffer_on_buffer_stretched<
     );
 }
 
-#[cfg(feature = "std")]
-/// `Smartly` draw a buffer on another buffer by first checking the visibility of drawn buffer and as such eliminating the manual `::<SAFE>`
-///
-/// Does not resize when requested dimensions and actual size are equivalent
-pub fn draw_buffer_on_buffer_stretched_smart<
-    const TRANSPARENCY: bool,
-    const TRANSPARENCY_INTERPOLATION: bool,
-    const NICHE_TRANSPARENCY_CHECK: bool,
->(
-    canvas: &mut Buffer,
-    texture: &Buffer,
-    position: (isize, isize),
-    result_dimensions: (usize, usize),
-    interpolation_mode: InterpolationMode,
-) {
-    if core::intrinsics::unlikely(result_dimensions == texture.get_size()) {
-        draw_buffer_on_buffer_smart::<
-            TRANSPARENCY,
-            TRANSPARENCY_INTERPOLATION,
-            NICHE_TRANSPARENCY_CHECK,
-        >(canvas, texture, position);
-    } else {
-        draw_buffer_on_buffer_smart::<
-            TRANSPARENCY,
-            TRANSPARENCY_INTERPOLATION,
-            NICHE_TRANSPARENCY_CHECK,
-        >(
-            canvas,
-            &texture.resize_content(result_dimensions, interpolation_mode),
-            position,
-        );
-    }
-}
-/// `Smartly` draw a buffer on another buffer by first checking the visibility of drawn buffer and as such eliminating the manual `::<SAFE>`
-pub fn draw_buffer_on_buffer_smart<
-    const TRANSPARENCY: bool,
-    const TRANSPARENCY_INTERPOLATION: bool,
-    const NICHE_TRANSPARENCY_CHECK: bool,
->(
-    canvas: &mut (
-             impl BufferMetrics + BufferGetPixel + BufferSetPixel + BufferCollision
-         ),
-    texture: &(impl BufferMetrics + BufferGetPixel),
-    position: (isize, isize),
-) {
-    let Some(collision_big) = canvas.try_to_collision::<false, isize>(position)
-    else {
-        return;
-    };
-    let Some(collision_small) =
-        texture.try_to_collision::<false, isize>(position)
-    else {
-        return;
-    };
-    if core::intrinsics::likely(
-        collision_big.do_areas_intersect_strict(&collision_small),
-    ) {
-        if collision_big.does_area_fully_include_other_area(&collision_small) {
-            draw_buffer_on_buffer::<
-                false,
-                TRANSPARENCY,
-                TRANSPARENCY_INTERPOLATION,
-                NICHE_TRANSPARENCY_CHECK,
-            >(canvas, texture, position);
-        } else {
-            draw_buffer_on_buffer::<
-                true,
-                TRANSPARENCY,
-                TRANSPARENCY_INTERPOLATION,
-                NICHE_TRANSPARENCY_CHECK,
-            >(canvas, texture, position);
-        }
-    }
-}
+// #[cfg(feature = "std")]
+// /// `Smartly` draw a buffer on another buffer by first checking the visibility of drawn buffer and as such eliminating the manual `::<SAFE>`
+// ///
+// /// Does not resize when requested dimensions and actual size are equivalent
+// pub fn draw_buffer_on_buffer_stretched_smart<
+//     const TRANSPARENCY: bool,
+//     const TRANSPARENCY_INTERPOLATION: bool,
+//     const NICHE_TRANSPARENCY_CHECK: bool,
+// >(
+//     canvas: &mut Buffer,
+//     texture: &Buffer,
+//     position: (isize, isize),
+//     result_dimensions: (usize, usize),
+//     interpolation_mode: InterpolationMode,
+// ) {
+//     if core::intrinsics::unlikely(result_dimensions == texture.get_size()) {
+//         draw_buffer_on_buffer_smart::<
+//             TRANSPARENCY,
+//             TRANSPARENCY_INTERPOLATION,
+//             NICHE_TRANSPARENCY_CHECK,
+//         >(canvas, texture, position);
+//     } else {
+//         draw_buffer_on_buffer_smart::<
+//             TRANSPARENCY,
+//             TRANSPARENCY_INTERPOLATION,
+//             NICHE_TRANSPARENCY_CHECK,
+//         >(
+//             canvas,
+//             &texture.resize_content(result_dimensions, interpolation_mode),
+//             position,
+//         );
+//     }
+// }
+// /// `Smartly` draw a buffer on another buffer by first checking the visibility of drawn buffer and as such eliminating the manual `::<SAFE>`
+// pub fn draw_buffer_on_buffer_smart<
+//     const TRANSPARENCY: bool,
+//     const TRANSPARENCY_INTERPOLATION: bool,
+//     const NICHE_TRANSPARENCY_CHECK: bool,
+// >(
+//     canvas: &mut (
+//              impl BufferMetrics + BufferGetPixel + BufferSetPixel + BufferCollision
+//          ),
+//     texture: &(impl BufferMetrics + BufferGetPixel),
+//     position: (isize, isize),
+// ) {
+//     let Some(collision_big) = canvas.try_to_collision::<false, isize>(position)
+//     else {
+//         return;
+//     };
+//     let Some(collision_small) =
+//         texture.try_to_collision::<false, isize>(position)
+//     else {
+//         return;
+//     };
+//     if core::intrinsics::likely(
+//         collision_big.do_areas_intersect_strict(&collision_small),
+//     ) {
+//         if collision_big.does_area_fully_include_other_area(&collision_small) {
+//             draw_buffer_on_buffer::<
+//                 false,
+//                 TRANSPARENCY,
+//                 TRANSPARENCY_INTERPOLATION,
+//                 NICHE_TRANSPARENCY_CHECK,
+//             >(canvas, texture, position);
+//         } else {
+//             draw_buffer_on_buffer::<
+//                 true,
+//                 TRANSPARENCY,
+//                 TRANSPARENCY_INTERPOLATION,
+//                 NICHE_TRANSPARENCY_CHECK,
+//             >(canvas, texture, position);
+//         }
+//     }
+// }
 
 /// Draw a buffer on another buffer 1 to 1 instead of scaling it
 #[allow(clippy::cast_possible_wrap)]
@@ -169,7 +169,7 @@ pub fn draw_buffer_on_buffer<
                 unsafe { texture.get_pixel_unchecked((texture_x, texture_y)) };
 
             if TRANSPARENCY {
-                let trans = mirl_core::graphics::get_alpha_of_u32(pixel);
+                let trans = pixel.alpha();
                 if NICHE_TRANSPARENCY_CHECK && trans == 0 {
                     continue;
                 }

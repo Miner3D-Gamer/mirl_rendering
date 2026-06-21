@@ -1,5 +1,5 @@
 // #![allow(clippy::inline_always)]
-// use mirl_core::Buffer;
+// use mirl_buffer::Buffer;
 
 // impl Buffer {
 //     #[must_use]

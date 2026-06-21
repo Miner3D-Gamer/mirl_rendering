@@ -1,4 +1,4 @@
-pub use mirl_core::render::{draw_pixel_safe, draw_pixel_unsafe};
+pub use mirl_buffer::{draw_pixel_safe, draw_pixel_unsafe};
 
 // type DrawPixelFunction =
 //     fn(&mut (impl BufferPointers + BufferMetrics), (usize, usize), u32);

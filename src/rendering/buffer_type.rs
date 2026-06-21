@@ -1,119 +1,120 @@
-use mirl_core::{
-    graphics::{
-        ColorManipulation, advance_color, get_alpha_of_u32, u32_to_argb_u8,
-    },
-    render::traits::{BufferData, BufferMetrics, BufferPointers, *},
-};
+use mirl_buffer::prelude::*;
+use mirl_buffer_interpolation::InterpolationMode;
 use mirl_extensions::{InterpolateAsInterpolator, IntoPatch, TryIntoPatch};
+use mirl_graphics::{
+    misc::advance_color,
+    // prelude::*,
+    u32_color_casting::{ColorManipulation, ColorManipulationWithoutInput},
+};
 
-/// Create a collision -> [Pos2<Rectangle>>](crate::math::geometry::Pos2D) / [Rectangle](crate::math::geometry::d2::Rectangle) from the buffer metrics -> Automatically implemented for structs that implement [`BufferMetrics`]
-pub const trait BufferCollision {
-    // /// Create a collision instance for the current buffer
-    // fn to_rectangle<const CS: bool, T: Copy>(
-    //     &self,
-    // ) -> mirl_math::geometry::d2::Rectangle<T, CS>
-    // where
-    //     (usize, usize): [const] IntoPatch<(T, T)>;
-    // /// Create a collision instance for the current buffer
-    // fn try_to_rectangle<
-    //     const CS: bool,
-    //     T: core::ops::Add<Output = T>
-    //         + PartialOrd
-    //         + Copy
-    //         + core::ops::Div<Output = T>,
-    // >(
-    //     &self,
-    // ) -> Option<mirl_math::geometry::d2::Rectangle<T, CS>>
-    // where
-    //     usize: [const] TryIntoPatch<T>;
-    #[must_use]
-    /// Create a collision instance for the current buffer
-    fn to_collision<const CS: bool, T: Copy>(
-        &self,
-        pos: (T, T),
-    ) -> mirl_math::geometry::d2::Rectangle<T, CS>
-    where
-        usize: [const] IntoPatch<T>;
-    /// Create a collision instance for the current buffer
-    #[must_use]
-    #[allow(clippy::cast_possible_wrap)]
-    fn try_to_collision<
-        const CS: bool,
-        T: core::ops::Add<Output = T>
-            + PartialOrd
-            + Copy
-            + core::ops::Div<Output = T>,
-    >(
-        &self,
-        pos: (T, T),
-    ) -> Option<mirl_math::geometry::d2::Rectangle<T, CS>>
-    where
-        usize: [const] TryIntoPatch<T>;
-}
+// /// Create a collision -> [Pos2<Rectangle>>](crate::math::geometry::Pos2D) / [Rectangle](crate::math::geometry::d2::Rectangle) from the buffer metrics -> Automatically implemented for structs that implement [`BufferMetrics`]
+// pub const trait BufferCollision {
+//     // /// Create a collision instance for the current buffer
+//     // fn to_rectangle<const CS: bool, T: Copy>(
+//     //     &self,
+//     // ) -> mirl_geometry::geometry::d2::Rectangle<T, CS>
+//     // where
+//     //     (usize, usize): [const] IntoPatch<(T, T)>;
+//     // /// Create a collision instance for the current buffer
+//     // fn try_to_rectangle<
+//     //     const CS: bool,
+//     //     T: core::ops::Add<Output = T>
+//     //         + PartialOrd
+//     //         + Copy
+//     //         + core::ops::Div<Output = T>,
+//     // >(
+//     //     &self,
+//     // ) -> Option<mirl_geometry::geometry::d2::Rectangle<T, CS>>
+//     // where
+//     //     usize: [const] TryIntoPatch<T>;
+//     #[must_use]
+//     /// Create a collision instance for the current buffer
+//     fn to_collision<const CS: bool, T: Copy>(
+//         &self,
+//         pos: (T, T),
+//     ) -> mirl_geometry::geometry::d2::Rectangle<T, CS>
+//     where
+//         usize: [const] IntoPatch<T>;
+//     /// Create a collision instance for the current buffer
+//     #[must_use]
+//     #[allow(clippy::cast_possible_wrap)]
+//     fn try_to_collision<
+//         const CS: bool,
+//         T: core::ops::Add<Output = T>
+//             + PartialOrd
+//             + Copy
+//             + core::ops::Div<Output = T>,
+//     >(
+//         &self,
+//         pos: (T, T),
+//     ) -> Option<mirl_geometry::geometry::d2::Rectangle<T, CS>>
+//     where
+//         usize: [const] TryIntoPatch<T>;
+// }
 
-impl<B: [const] BufferMetrics> const BufferCollision for B {
-    // /// Create a collision instance for the current buffer
-    // default fn to_rectangle<const CS: bool, T: Copy>(
-    //     &self,
-    // ) -> mirl_math::geometry::d2::Rectangle<T, CS>
-    // where
-    //     (usize, usize): [const] IntoPatch<(T, T)>,
-    // {
-    //     mirl_math::geometry::d2::Rectangle::new(self.total_size().into_value())
-    // }
-    // /// Create a collision instance for the current buffer using isize coordinates
-    // #[allow(clippy::cast_possible_wrap)]
-    // default fn try_to_rectangle<
-    //     const CS: bool,
-    //     T: core::ops::Add<Output = T>
-    //         + PartialOrd
-    //         + Copy
-    //         + core::ops::Div<Output = T>,
-    // >(
-    //     &self,
-    // ) -> Option<mirl_math::geometry::d2::Rectangle<T, CS>>
-    // where
-    //     usize: [const] TryIntoPatch<T>,
-    // {
-    //     Some(mirl_math::geometry::d2::Rectangle::new((
-    //         (self.width()).try_into_value()?,
-    //         (self.height()).try_into_value()?,
-    //     )))
-    // }
-    /// Create a collision instance for the current buffer
-    default fn to_collision<const CS: bool, T: Copy>(
-        &self,
-        pos: (T, T),
-    ) -> mirl_math::geometry::d2::Rectangle<T, CS>
-    where
-        usize: [const] IntoPatch<T>,
-    {
-        mirl_math::geometry::d2::Rectangle::new(
-            pos,
-            (self.width().into_value(), self.height().into_value()),
-        )
-    }
-    /// Create a collision instance for the current buffer using isize coordinates
-    #[allow(clippy::cast_possible_wrap)]
-    default fn try_to_collision<
-        const CS: bool,
-        T: core::ops::Add<Output = T>
-            + PartialOrd
-            + Copy
-            + core::ops::Div<Output = T>,
-    >(
-        &self,
-        pos: (T, T),
-    ) -> Option<mirl_math::geometry::d2::Rectangle<T, CS>>
-    where
-        usize: [const] TryIntoPatch<T>,
-    {
-        Some(mirl_math::geometry::d2::Rectangle::new(
-            pos,
-            (self.width().try_into_value()?, self.height().try_into_value()?),
-        ))
-    }
-}
+// impl<B: [const] BufferMetrics> const BufferCollision for B {
+//     // /// Create a collision instance for the current buffer
+//     // default fn to_rectangle<const CS: bool, T: Copy>(
+//     //     &self,
+//     // ) -> mirl_geometry::geometry::d2::Rectangle<T, CS>
+//     // where
+//     //     (usize, usize): [const] IntoPatch<(T, T)>,
+//     // {
+//     //     mirl_geometry::geometry::d2::Rectangle::new(self.total_size().into_value())
+//     // }
+//     // /// Create a collision instance for the current buffer using isize coordinates
+//     // #[allow(clippy::cast_possible_wrap)]
+//     // default fn try_to_rectangle<
+//     //     const CS: bool,
+//     //     T: core::ops::Add<Output = T>
+//     //         + PartialOrd
+//     //         + Copy
+//     //         + core::ops::Div<Output = T>,
+//     // >(
+//     //     &self,
+//     // ) -> Option<mirl_geometry::geometry::d2::Rectangle<T, CS>>
+//     // where
+//     //     usize: [const] TryIntoPatch<T>,
+//     // {
+//     //     Some(mirl_geometry::geometry::d2::Rectangle::new((
+//     //         (self.width()).try_into_value()?,
+//     //         (self.height()).try_into_value()?,
+//     //     )))
+//     // }
+//     /// Create a collision instance for the current buffer
+//     default fn to_collision<const CS: bool, T: Copy>(
+//         &self,
+//         pos: (T, T),
+//     ) -> mirl_geometry::geometry::d2::Rectangle<T, CS>
+//     where
+//         usize: [const] IntoPatch<T>,
+//     {
+//         mirl_geometry::geometry::d2::Rectangle::new(
+//             pos,
+//             (self.width().into_value(), self.height().into_value()),
+//         )
+//     }
+//     /// Create a collision instance for the current buffer using isize coordinates
+//     #[allow(clippy::cast_possible_wrap)]
+//     default fn try_to_collision<
+//         const CS: bool,
+//         T: core::ops::Add<Output = T>
+//             + PartialOrd
+//             + Copy
+//             + core::ops::Div<Output = T>,
+//     >(
+//         &self,
+//         pos: (T, T),
+//     ) -> Option<mirl_geometry::geometry::d2::Rectangle<T, CS>>
+//     where
+//         usize: [const] TryIntoPatch<T>,
+//     {
+//         Some(mirl_geometry::geometry::d2::Rectangle::new(
+//             pos,
+//             (self.width().try_into_value()?, self.height().try_into_value()?),
+//         ))
+//     }
+// }
 /// Check if the given position is within the bounds of the buffer
 pub const trait IsPixelPositionInBuffer {
     /// Safely check if the position is inside  the buffer
@@ -189,12 +190,10 @@ impl<S: BufferGetPixel + BufferPointers + BufferMetrics>
         } else {
             unsafe { self.get_pixel_unchecked(xy) }
         };
-        let inverted = mirl_core::graphics::invert_color(old);
+        let inverted = old.invert_color();
 
-        let new = inverted.interpolate_color_with(
-            old,
-            mirl_core::graphics::get_alpha_of_u32(color) as f32 / 255.0,
-        );
+        let new =
+            inverted.interpolate_color_with(old, color.alpha() as f32 / 255.0);
 
         crate::draw_pixel_unsafe(self, xy, new);
     }
@@ -231,18 +230,18 @@ pub const trait ResizeBuffer {
     fn resize_content(
         &self,
         size: (usize, usize),
-        resizing_method: mirl::graphics::interpolation::InterpolationMode,
+        resizing_method: InterpolationMode,
     ) -> Self;
 }
 #[cfg(feature = "std")]
-impl ResizeBuffer for mirl_core::Buffer {
+impl ResizeBuffer for Buffer {
     default fn resize_content(
         &self,
         size: (usize, usize),
-        resizing_method: mirl::graphics::interpolation::InterpolationMode,
+        resizing_method: InterpolationMode,
     ) -> Self {
         let mut new = Self::new_empty(size);
-        let b = mirl::graphics::interpolation::resize_buffer(
+        let b = mirl_buffer_interpolation::resize_buffer(
             self,
             self.width,
             self.height,
@@ -261,7 +260,7 @@ pub const trait FlipBuffer {
     /// Flip the buffer horizontally
     fn flip_horizontally(&mut self);
 }
-impl FlipBuffer for mirl_core::Buffer {
+impl FlipBuffer for Buffer {
     /// Flip the buffer vertically (top becomes bottom)
     default fn flip_vertically(&mut self) {
         let mut result = Self::new_empty((self.width, self.height));
@@ -308,7 +307,7 @@ pub const trait RotateBuffer {
     fn rotate_270(&mut self);
 }
 
-impl RotateBuffer for mirl_core::Buffer {
+impl RotateBuffer for Buffer {
     /// Rotate the buffer 90°
     default fn rotate_90(&mut self) {
         let mut result = Self::new_empty((self.height, self.width));
@@ -362,7 +361,7 @@ impl RotateBuffer for mirl_core::Buffer {
     }
 }
 impl<const WIDTH: usize, const HEIGHT: usize> FlipBuffer
-    for mirl_core::ConstBuffer<WIDTH, HEIGHT>
+    for ConstBuffer<WIDTH, HEIGHT>
 where
     [(); WIDTH * HEIGHT]:,
 {
@@ -424,9 +423,7 @@ pub const trait FadeOutEdges {
     /// A steepness of 15 and offset of 0.8 makes a nice looking icon (Rough estimates based on trail and error)
     fn fade_out_edges(&mut self, steepness: f32, offset: f32);
 }
-impl<S: BufferMetrics + mirl_core::render::traits::BufferPointers> FadeOutEdges
-    for S
-{
+impl<S: BufferMetrics + BufferPointers> FadeOutEdges for S {
     default fn fade_out_edges(&mut self, steepness: f32, offset: f32) {
         let cx = self.width() as f32 / 2.0;
         let cy = self.height() as f32 / 2.0;
@@ -549,14 +546,11 @@ impl<S: BufferMetrics + BufferData + SetBufferMetrics> TrimBuffer for S {
     default fn is_row_transparent(&self, row: usize) -> bool {
         let start = row * self.width();
         let end = start + self.width();
-        self.data()[start..end]
-            .iter()
-            .all(|&pixel| get_alpha_of_u32(pixel) == 0)
+        self.data()[start..end].iter().all(|&pixel| pixel.alpha() == 0)
     }
     default fn is_col_transparent(&self, col: usize) -> bool {
-        (0..self.height()).all(|row| {
-            get_alpha_of_u32(self.data()[row * self.width() + col]) == 0
-        })
+        (0..self.height())
+            .all(|row| self.data()[row * self.width() + col].alpha() == 0)
     }
     /// Trims the image by the given restrictions
     default fn apply_trim(
@@ -663,9 +657,12 @@ impl<S: BufferData> GetUnusedColor for S {
         let mut current_color = current_color;
         let mut unique_colors = std::collections::HashSet::new();
         for color in self.data() {
-            let i = u32_to_argb_u8(*color);
-            if i.0 != 0 {
-                unique_colors.insert((i.1, i.2, i.3));
+            if color.alpha() != 0 {
+                unique_colors.insert((
+                    color.red() as u8,
+                    color.green() as u8,
+                    color.blue() as u8,
+                ));
             }
         }
         while unique_colors.contains(&current_color) {

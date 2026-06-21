@@ -1,4 +1,4 @@
-use mirl_core::ConstBuffer;
+use mirl_buffer::ConstBuffer;
 /// A temporary solution to const buffer rotation
 pub trait TempConstBufferRotate {
     /// Normally rotated

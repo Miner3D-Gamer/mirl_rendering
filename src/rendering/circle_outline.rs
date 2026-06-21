@@ -1,4 +1,4 @@
-use mirl_core::render::traits::*;
+use mirl_buffer::traits::*;
 
 use super::{draw_pixel_safe, draw_pixel_unsafe};
 

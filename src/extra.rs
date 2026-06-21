@@ -1,7 +1,7 @@
 // I'm not even gonna pretend I know what any of this means
-
+#[allow(unused_imports)]
 #[cfg(not(feature = "std"))]
-use crate::extensions::*;
+use mirl_extensions::*;
 
 /// Rotate a [`Vertex3D`] around a [`Point3D`] on the x axis
 pub fn rotate_x_vertex_3d(

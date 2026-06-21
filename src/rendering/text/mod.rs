@@ -1,7 +1,7 @@
 // I despise how much duplicate code is present in the text rendering functions
 
+use mirl::settings::SettingsMapType;
 use parking_lot::RwLock;
-
 /// Caches drawn text
 ///
 /// See [`GlyphCache`] for the composition of this type
@@ -62,17 +62,17 @@ mod aliased;
 mod antialiased;
 pub use aliased::*;
 pub use antialiased::*;
-
-use crate::{
-    render::{BufferMetrics, BufferMisc, BufferPointers},
-    settings::{MapType, SettingsMapType},
-};
-
+// use crate::{
+//     render::{BufferMetrics, BufferMisc, BufferPointers},
+//     settings::{MapType, SettingsMapType},
+// };
+use mirl::settings::MapType;
+use mirl_buffer::traits::*;
 /// Switch between aliased and antialiased text rendering
 ///
 /// When `antialiased` is [None], the drawn text respects alpha, otherwise it expects an alpha cutoff
 pub fn draw_text_switch<const SAFE: bool>(
-    buffer: &mut (impl BufferPointers + BufferMetrics + BufferMisc),
+    buffer: &mut (impl BufferPointers + BufferMetrics),
     text: &str,
     xy: (usize, usize),
     color: u32,
@@ -90,7 +90,7 @@ pub fn draw_text_switch<const SAFE: bool>(
 ///
 /// When `antialiased` is [None], the drawn text respects alpha, otherwise it expects an alpha cutoff
 pub fn draw_text_switch_isize<const SAFE: bool>(
-    buffer: &mut (impl BufferPointers + BufferMetrics + BufferMisc),
+    buffer: &mut (impl BufferPointers + BufferMetrics),
     text: &str,
     xy: (isize, isize),
     color: u32,
