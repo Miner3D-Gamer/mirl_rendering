@@ -7,8 +7,8 @@ repository.workspace = true
 [dependencies]
 
 mirl_extensions = { version = "0.0.0-alpha" }
-mirl_core = { version = "0.0.0-alpha" }
-mirl = { version = "10.0.0-alpha" }
+# mirl_core = { version = "0.0.0-alpha" }
+# mirl = { version = "10.0.0-alpha" }
 mirl_buffer = { version = "0.0.0-alpha" }
 mirl_graphics = { version = "0.0.0-alpha" }
 mirl_buffer_interpolation = { version = "0.0.0-alpha" }
@@ -59,11 +59,11 @@ all_codecs = ["serde", "bitcode", "wincode", "compactly", "zerocopy"]
 # all_enum_extensions = ["strum", "enum_ext"]
 
 # Codec stuff
-serde = ["dep:serde", "mirl_derive", "mirl_core/serde"]
-bitcode = ["dep:bitcode", "mirl_derive", "mirl_core/bitcode"]
-wincode = ["dep:wincode", "mirl_derive", "mirl_core/wincode"]
-compactly = ["dep:compactly", "mirl_derive", "mirl_core/compactly"]
-zerocopy = ["dep:zerocopy", "mirl_derive", "mirl_core/zerocopy"]
+serde = ["dep:serde", "mirl_derive"]
+bitcode = ["dep:bitcode", "mirl_derive"]
+wincode = ["dep:wincode", "mirl_derive"]
+compactly = ["dep:compactly", "mirl_derive"]
+zerocopy = ["dep:zerocopy", "mirl_derive"]
 
 # # Enum extensions
 # strum = ["dep:strum", "mirl_derive"]

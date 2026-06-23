@@ -1,4 +1,4 @@
-use mirl::Buffer;
+use mirl_buffer::Buffer;
 
 use crate::extra::uv_interpolate;
 /// This sucks, it works but it sucks

@@ -1,6 +1,8 @@
 use mirl_buffer::prelude::*;
 use mirl_buffer_interpolation::InterpolationMode;
-use mirl_extensions::{InterpolateAsInterpolator, IntoPatch, TryIntoPatch};
+use mirl_extensions::{
+    Interpolate0To1AsInterpolator, InterpolateAsInterpolator, IntoPatch, TryIntoPatch,
+};
 use mirl_graphics::{
     misc::advance_color,
     // prelude::*,
@@ -118,9 +120,7 @@ use mirl_graphics::{
 /// Check if the given position is within the bounds of the buffer
 pub const trait IsPixelPositionInBuffer {
     /// Safely check if the position is inside  the buffer
-    fn is_pixel_position_in_buffer<
-        T: [const] IntoPatch<usize> + [const] core::marker::Destruct,
-    >(
+    fn is_pixel_position_in_buffer<T: [const] IntoPatch<usize> + [const] core::marker::Destruct>(
         &self,
         position: (T, T),
     ) -> bool;
@@ -133,15 +133,14 @@ pub const trait IsPixelPositionInBuffer {
         position: (T, T),
     ) -> bool;
 }
-impl<S: [const] BufferMetrics> const IsPixelPositionInBuffer for S {
+const impl<S: [const] BufferMetrics> IsPixelPositionInBuffer for S {
     default fn is_pixel_position_in_buffer<
         T: [const] IntoPatch<usize> + [const] core::marker::Destruct,
     >(
         &self,
         position: (T, T),
     ) -> bool {
-        position.0.into_value() < self.width()
-            && position.1.into_value() < self.height()
+        position.0.into_value() < self.width() && position.1.into_value() < self.height()
     }
     default fn try_is_pixel_position_in_buffer<
         T: [const] TryIntoPatch<usize> + [const] core::marker::Destruct,
@@ -161,27 +160,13 @@ impl<S: [const] BufferMetrics> const IsPixelPositionInBuffer for S {
 /// Helper Functions that can be used inside the `execute_at`
 pub const trait BufferExecuteAtFunctions {
     /// Inverts the color at the given coordinates
-    fn invert_color_below<const SAFE: bool>(
-        &mut self,
-        xy: (usize, usize),
-        color: u32,
-    );
+    fn invert_color_below<const SAFE: bool>(&mut self, xy: (usize, usize), color: u32);
     /// Inverts the color below if it matches the input number
-    fn invert_color_if_same<const SAFE: bool>(
-        &mut self,
-        xy: (usize, usize),
-        color: u32,
-    );
+    fn invert_color_if_same<const SAFE: bool>(&mut self, xy: (usize, usize), color: u32);
 }
 use mirl_extensions::InterpolateColorBetween;
-impl<S: BufferGetPixel + BufferPointers + BufferMetrics>
-    BufferExecuteAtFunctions for S
-{
-    default fn invert_color_below<const SAFE: bool>(
-        &mut self,
-        xy: (usize, usize),
-        color: u32,
-    ) {
+impl<S: BufferGetPixel + BufferPointers + BufferMetrics> BufferExecuteAtFunctions for S {
+    default fn invert_color_below<const SAFE: bool>(&mut self, xy: (usize, usize), color: u32) {
         let old = if SAFE {
             let Some(old) = self.get_pixel_option(xy) else {
                 return;
@@ -192,19 +177,14 @@ impl<S: BufferGetPixel + BufferPointers + BufferMetrics>
         };
         let inverted = old.invert_color();
 
-        let new =
-            inverted.interpolate_color_with(old, color.alpha() as f32 / 255.0);
+        let new = inverted.interpolate_color_with(old, color.alpha() as f32 / 255.0);
 
         crate::draw_pixel_unsafe(self, xy, new);
     }
     /// A helper function to be used inside a `execute_at` render function
     ///
     /// Inverts the color below if it matches the input number
-    default fn invert_color_if_same<const SAFE: bool>(
-        &mut self,
-        xy: (usize, usize),
-        color: u32,
-    ) {
+    default fn invert_color_if_same<const SAFE: bool>(&mut self, xy: (usize, usize), color: u32) {
         let old = if SAFE {
             let Some(old) = self.get_pixel_option(xy) else {
                 return;
@@ -227,11 +207,7 @@ impl<S: BufferGetPixel + BufferPointers + BufferMetrics>
 pub const trait ResizeBuffer {
     #[must_use]
     /// Creates a new buffer and copies the contents of the current buffer
-    fn resize_content(
-        &self,
-        size: (usize, usize),
-        resizing_method: InterpolationMode,
-    ) -> Self;
+    fn resize_content(&self, size: (usize, usize), resizing_method: InterpolationMode) -> Self;
 }
 #[cfg(feature = "std")]
 impl ResizeBuffer for Buffer {
@@ -287,8 +263,7 @@ impl FlipBuffer for Buffer {
             for y in 0..self.height {
                 for x in 0..self.width {
                     let dst_idx = y * self.width + (self.width - 1 - x);
-                    *result.mut_pointer().add(dst_idx) =
-                        *self.pointer().add(y * self.width + x);
+                    *result.mut_pointer().add(dst_idx) = *self.pointer().add(y * self.width + x);
                 }
             }
         }
@@ -360,8 +335,7 @@ impl RotateBuffer for Buffer {
         *self = result;
     }
 }
-impl<const WIDTH: usize, const HEIGHT: usize> FlipBuffer
-    for ConstBuffer<WIDTH, HEIGHT>
+impl<const WIDTH: usize, const HEIGHT: usize> FlipBuffer for ConstBuffer<WIDTH, HEIGHT>
 where
     [(); WIDTH * HEIGHT]:,
 {
@@ -372,8 +346,7 @@ where
         unsafe {
             for y in 0..HEIGHT {
                 let src_row = self.as_ptr().add(y * WIDTH);
-                let dst_row =
-                    result.data.as_mut_ptr().add((HEIGHT - 1 - y) * WIDTH);
+                let dst_row = result.data.as_mut_ptr().add((HEIGHT - 1 - y) * WIDTH);
                 core::ptr::copy_nonoverlapping(src_row, dst_row, WIDTH);
             }
         }
@@ -388,8 +361,7 @@ where
             for y in 0..HEIGHT {
                 for x in 0..WIDTH {
                     let dst_idx = y * WIDTH + (WIDTH - 1 - x);
-                    *result.data.as_mut_ptr().add(dst_idx) =
-                        *self.data.as_ptr().add(y * WIDTH + x);
+                    *result.data.as_mut_ptr().add(dst_idx) = *self.data.as_ptr().add(y * WIDTH + x);
                 }
             }
         }
@@ -405,7 +377,7 @@ pub const trait ApplyFilter {
         function: impl [const] Fn(u32) -> u32 + [const] core::marker::Destruct,
     );
 }
-impl<S: [const] BufferData> const ApplyFilter for S {
+const impl<S: [const] BufferData> ApplyFilter for S {
     default fn apply_filter(
         &mut self,
         function: impl [const] Fn(u32) -> u32 + [const] core::marker::Destruct,
@@ -437,14 +409,11 @@ impl<S: BufferMetrics + BufferPointers> FadeOutEdges for S {
                 let dy = y as f32 - cy;
                 let dist = dx.hypot(dy) / max_dist;
                 let fade = 1.0 - dist;
-                let fade = 1.0
-                    - mirl_core::math::smooth_0_to_1(fade, steepness, offset);
+                let fade = 1.0 - fade.interpolate_smooth_0_to_1(steepness, offset);
                 unsafe {
                     let color = *self.pointer().add(y * self.width() + x);
-                    *self.mut_pointer().add(y * self.width() + x) = color
-                        .with_alpha(
-                            fade.interpolate_values(0_f32, 255_f32) as u32
-                        );
+                    *self.mut_pointer().add(y * self.width() + x) =
+                        color.with_alpha(fade.interpolate_values(0_f32, 255_f32) as u32);
                 };
                 x += 1;
             }
@@ -462,11 +431,7 @@ pub const trait ClearBuffer {
 impl<S: BufferPointers + BufferMetrics + BufferData> ClearBuffer for S {
     default fn clear(&mut self) {
         unsafe {
-            core::ptr::write_bytes(
-                self.mut_pointer(),
-                0,
-                self.width() * self.height(),
-            );
+            core::ptr::write_bytes(self.mut_pointer(), 0, self.width() * self.height());
         }
     }
     default fn clear_buffer_with_color(&mut self, color: u32) {
@@ -534,32 +499,21 @@ pub const trait TrimBuffer: TrimBufferHelper {
     /// Checks if the requested column only has fully transparent pixels
     fn is_col_transparent(&self, row: usize) -> bool;
     /// Trims the image by the given restrictions
-    fn apply_trim(
-        &mut self,
-        top: usize,
-        bottom: usize,
-        left: usize,
-        right: usize,
-    );
+    fn apply_trim(&mut self, top: usize, bottom: usize, left: usize, right: usize);
 }
 impl<S: BufferMetrics + BufferData + SetBufferMetrics> TrimBuffer for S {
     default fn is_row_transparent(&self, row: usize) -> bool {
         let start = row * self.width();
         let end = start + self.width();
-        self.data()[start..end].iter().all(|&pixel| pixel.alpha() == 0)
+        self.data()[start..end]
+            .iter()
+            .all(|&pixel| pixel.alpha() == 0)
     }
     default fn is_col_transparent(&self, col: usize) -> bool {
-        (0..self.height())
-            .all(|row| self.data()[row * self.width() + col].alpha() == 0)
+        (0..self.height()).all(|row| self.data()[row * self.width() + col].alpha() == 0)
     }
     /// Trims the image by the given restrictions
-    default fn apply_trim(
-        &mut self,
-        top: usize,
-        bottom: usize,
-        left: usize,
-        right: usize,
-    ) {
+    default fn apply_trim(&mut self, top: usize, bottom: usize, left: usize, right: usize) {
         let new_width = self.width() - left - right;
         let new_height = self.height() - top - bottom;
         let mut new_data = Vec::with_capacity(new_width * new_height);
@@ -587,8 +541,7 @@ pub const trait TrimBufferHelper {
 impl<S: BufferMetrics + TrimBuffer> TrimBufferHelper for S {
     default fn remove_margins(&mut self) {
         // Remove all margins in one pass to avoid multiple data copies
-        let (top_trim, bottom_trim, left_trim, right_trim) =
-            self.calculate_trims();
+        let (top_trim, bottom_trim, left_trim, right_trim) = self.calculate_trims();
 
         if top_trim > 0 || bottom_trim > 0 || left_trim > 0 || right_trim > 0 {
             self.apply_trim(top_trim, bottom_trim, left_trim, right_trim);
@@ -644,33 +597,19 @@ pub const trait GetUnusedColor {
     /// Try to find an unused color of a buffer, colors that are completely
     ///
     /// Warning, if the buffer contains all 16581375 (255**3) color/alpha combinations this may cause an infinite loop
-    fn get_unused_color_of_buffer(
-        &mut self,
-        current_color: (u8, u8, u8),
-    ) -> (u8, u8, u8);
+    fn get_unused_color_of_buffer(&mut self, current_color: (u8, u8, u8)) -> (u8, u8, u8);
 }
 impl<S: BufferData> GetUnusedColor for S {
-    default fn get_unused_color_of_buffer(
-        &mut self,
-        current_color: (u8, u8, u8),
-    ) -> (u8, u8, u8) {
+    default fn get_unused_color_of_buffer(&mut self, current_color: (u8, u8, u8)) -> (u8, u8, u8) {
         let mut current_color = current_color;
         let mut unique_colors = std::collections::HashSet::new();
         for color in self.data() {
             if color.alpha() != 0 {
-                unique_colors.insert((
-                    color.red() as u8,
-                    color.green() as u8,
-                    color.blue() as u8,
-                ));
+                unique_colors.insert((color.red() as u8, color.green() as u8, color.blue() as u8));
             }
         }
         while unique_colors.contains(&current_color) {
-            current_color = advance_color(
-                current_color.0,
-                current_color.1,
-                current_color.2,
-            );
+            current_color = advance_color(current_color.0, current_color.1, current_color.2);
         }
         current_color
     }

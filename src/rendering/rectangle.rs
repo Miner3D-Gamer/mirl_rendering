@@ -1,5 +1,5 @@
 #[cfg(feature = "std")]
-use mirl::Buffer;
+use mirl_buffer::Buffer;
 use mirl_buffer::traits::*;
 
 use super::{draw_pixel_safe, draw_pixel_unsafe};

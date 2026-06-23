@@ -1,31 +1,33 @@
 #![allow(clippy::similar_names)]
 #![allow(clippy::significant_drop_tightening)]
-use mirl_buffer::{draw_pixel_safe, draw_pixel_unsafe};
 use mirl_buffer::traits::*;
+use mirl_buffer::{draw_pixel_safe, draw_pixel_unsafe};
 
-use super::get_character;
+use crate::{Glyph, GlyphSize};
+
 // use crate::render::{
 //     BufferMetrics, BufferPointers, draw_pixel_safe, draw_pixel_unsafe,
 // };
 /// Draw text in the specified font
-pub fn draw_text<const SAFE: bool>(
+pub fn draw_text<const SAFE: bool, T: crate::GlyphCache>(
     buffer: &mut (impl BufferPointers + BufferMetrics),
     text: &str,
     xy: (usize, usize),
     color: u32,
-    size: f32,
-    font: &fontdue::Font,
+    size: GlyphSize,
+    glyph_cache: &mut T,
     alpha_cutoff: u8,
 ) {
     let mut pen_x = xy.0 as f32;
     let pen_y = xy.1;
-    let ascent = font
-        .horizontal_line_metrics(size)
+    let ascent = glyph_cache
+        .get_font()
+        .horizontal_line_metrics(size.inner())
         .map_or(0, |font_metrics| font_metrics.ascent as usize);
 
     for ch in text.chars() {
         // If not in cache, rasterize and insert
-        let char = get_character(ch, size, font);
+        let char = glyph_cache.get_or_insert(Glyph::new(ch, size, color));
         let metrics = char.0;
         let bitmap = &char.1;
 
@@ -65,24 +67,25 @@ pub fn draw_text<const SAFE: bool>(
 }
 
 /// Draw text yet stretch the resulting characters
-pub fn draw_text_stretched<const SAFE: bool>(
+pub fn draw_text_stretched<const SAFE: bool, T: crate::GlyphCache>(
     buffer: &mut (impl BufferPointers + BufferMetrics),
     text: &str,
     xy: (usize, usize),
     color: u32,
-    size: f32,
-    font: &fontdue::Font,
+    size: GlyphSize,
+    glyph_cache: &mut T,
     stretch: (f32, f32),
 ) {
     let mut pen_x = xy.0 as f32;
     let pen_y = xy.1;
-    let ascent = font
-        .horizontal_line_metrics(size)
+    let ascent = glyph_cache
+        .get_font()
+        .horizontal_line_metrics(size.inner())
         .map_or(0, |font_metrics| font_metrics.ascent as usize);
 
     for ch in text.chars() {
         // If not in cache, rasterize and insert
-        let char = get_character(ch, size, font);
+        let char = glyph_cache.get_or_insert(Glyph::new(ch, size, color));
         let metrics = char.0;
         let bitmap = &char.1;
 
@@ -97,17 +100,14 @@ pub fn draw_text_stretched<const SAFE: bool>(
                 continue;
             }
 
-            let bitmap_row_start =
-                ((gy as f32 / stretch.1) as usize) * metrics.width;
+            let bitmap_row_start = ((gy as f32 / stretch.1) as usize) * metrics.width;
             for gx in 0..w.floor() as usize {
                 let px = pen_x as usize + gx;
                 if px >= buffer.width() {
                     continue;
                 }
 
-                if bitmap[bitmap_row_start + (gx as f32 / stretch.0) as usize]
-                    > 0
-                {
+                if bitmap[bitmap_row_start + (gx as f32 / stretch.0) as usize] > 0 {
                     if SAFE {
                         draw_pixel_safe(buffer, (px, py), color);
                     } else {
@@ -121,24 +121,25 @@ pub fn draw_text_stretched<const SAFE: bool>(
 }
 
 /// Same as [`draw_text`] but uses isize for positioning allowing for partially out of bounds text (left and top)
-pub fn draw_text_isize<const SAFE: bool>(
+pub fn draw_text_isize<const SAFE: bool, T: crate::GlyphCache>(
     buffer: &mut (impl BufferPointers + BufferMetrics),
     text: &str,
     xy: (isize, isize),
     color: u32,
-    size: f32,
-    font: &fontdue::Font,
+    size: GlyphSize,
+    glyph_cache: &mut T,
     alpha_cutoff: u8,
 ) {
     let mut pen_x = xy.0 as f32;
     let pen_y = xy.1;
-    let ascent = font
-        .horizontal_line_metrics(size)
+    let ascent = glyph_cache
+        .get_font()
+        .horizontal_line_metrics(size.inner())
         .map_or(0, |font_metrics| font_metrics.ascent as isize);
 
     for ch in text.chars() {
         // If not in cache, rasterize and insert
-        let char = get_character(ch, size, font);
+        let char = glyph_cache.get_or_insert(Glyph::new(ch, size, color));
         let metrics = char.0;
         let bitmap = &char.1;
 
@@ -185,24 +186,25 @@ pub fn draw_text_isize<const SAFE: bool>(
 }
 
 /// Same as [`draw_text_stretched`] but uses isize for positioning allowing for partially out of bounds text (left and top)
-pub fn draw_text_stretch_isize<const SAFE: bool>(
+pub fn draw_text_stretch_isize<const SAFE: bool, T: crate::GlyphCache>(
     buffer: &mut (impl BufferPointers + BufferMetrics),
     text: &str,
     xy: (isize, isize),
     color: u32,
-    size: f32,
-    font: &fontdue::Font,
+    size: GlyphSize,
+    glyph_cache: &mut T,
     stretch: (f32, f32),
 ) {
     let mut pen_x = xy.0 as f32;
     let pen_y = xy.1;
-    let ascent = font
-        .horizontal_line_metrics(size)
+    let ascent = glyph_cache
+        .get_font()
+        .horizontal_line_metrics(size.inner())
         .map_or(0, |font_metrics| font_metrics.ascent as isize);
 
     for ch in text.chars() {
         // If not in cache, rasterize and insert
-        let char = get_character(ch, size, font);
+        let char = glyph_cache.get_or_insert(Glyph::new(ch, size, color));
         let metrics = char.0;
         let bitmap = &char.1;
 
@@ -217,29 +219,18 @@ pub fn draw_text_stretch_isize<const SAFE: bool>(
                 continue;
             }
 
-            let bitmap_row_start =
-                ((gy as f32 / stretch.1) as usize) * metrics.width;
+            let bitmap_row_start = ((gy as f32 / stretch.1) as usize) * metrics.width;
             for gx in 0..w.floor() as usize {
                 let px = pen_x as isize + gx as isize;
                 if px < 0 || px >= buffer.width() as isize {
                     continue;
                 }
 
-                if bitmap[bitmap_row_start + (gy as f32 / stretch.0) as usize]
-                    > 0
-                {
+                if bitmap[bitmap_row_start + (gy as f32 / stretch.0) as usize] > 0 {
                     if SAFE {
-                        draw_pixel_safe(
-                            buffer,
-                            (px as usize, py as usize),
-                            color,
-                        );
+                        draw_pixel_safe(buffer, (px as usize, py as usize), color);
                     } else {
-                        draw_pixel_unsafe(
-                            buffer,
-                            (px as usize, py as usize),
-                            color,
-                        );
+                        draw_pixel_unsafe(buffer, (px as usize, py as usize), color);
                     }
                 }
             }

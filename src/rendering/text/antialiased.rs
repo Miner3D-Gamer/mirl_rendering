@@ -3,30 +3,31 @@
 
 use mirl_buffer::{draw_pixel_safe, draw_pixel_unsafe, traits::*};
 
-use super::get_character;
+use crate::{Glyph, GlyphSize};
 
 #[allow(clippy::cast_precision_loss)]
 #[allow(clippy::cast_possible_truncation)]
 #[allow(clippy::cast_sign_loss)]
 /// Draw text in the specified font
-pub fn draw_text_antialiased<const SAFE: bool>(
+pub fn draw_text_antialiased<const SAFE: bool, T: crate::GlyphCache>(
     buffer: &mut (impl BufferPointers + BufferMetrics),
     text: &str,
     xy: (usize, usize),
     color: u32,
-    size: f32,
-    font: &fontdue::Font,
+    size: GlyphSize,
+    glyph_cache: &mut T,
 ) {
     let mut pen_x = xy.0 as f32;
     let pen_y = xy.1;
 
-    let ascent = font
-        .horizontal_line_metrics(size)
+    let ascent = glyph_cache
+        .get_font()
+        .horizontal_line_metrics(size.inner())
         .map_or(0, |font_metrics| font_metrics.ascent as usize);
 
     for ch in text.chars() {
         // Try to get the glyph from cache first
-        let char = get_character(ch, size, font);
+        let char = glyph_cache.get_or_insert(Glyph::new(ch, size, color));
         let metrics = char.0;
         let bitmap = &char.1;
 
@@ -36,8 +37,7 @@ pub fn draw_text_antialiased<const SAFE: bool>(
             for gx in 0..metrics.width {
                 let px = pen_x as usize + gx;
                 // Correcting for letter height
-                let py =
-                    ((pen_y + gy + offset_y) as i32 - metrics.ymin) as usize;
+                let py = ((pen_y + gy + offset_y) as i32 - metrics.ymin) as usize;
 
                 if px < buffer.width() && py < buffer.height() {
                     let index = py * buffer.width() + px;
@@ -64,20 +64,16 @@ pub fn draw_text_antialiased<const SAFE: bool>(
                             let inv_alpha: u8 = 255 - alpha;
                             let nr = ((tr as u16 * u16::from(alpha)
                                 + br as u16 * u16::from(inv_alpha))
-                                / 255)
-                                as u8;
+                                / 255) as u8;
                             let ng = ((tg as u16 * u16::from(alpha)
                                 + bg as u16 * u16::from(inv_alpha))
-                                / 255)
-                                as u8;
+                                / 255) as u8;
                             let nb = ((tb as u16 * u16::from(alpha)
                                 + bb as u16 * u16::from(inv_alpha))
-                                / 255)
-                                as u8;
+                                / 255) as u8;
                             let na = ((ta as u16 * u16::from(alpha)
                                 + ba as u16 * u16::from(inv_alpha))
-                                / 255)
-                                as u8;
+                                / 255) as u8;
 
                             let new = u32::from(nr) << 24
                                 | u32::from(ng) << 16
@@ -103,25 +99,26 @@ pub fn draw_text_antialiased<const SAFE: bool>(
 /// Execute a function at every pixel position
 ///
 /// function: `fn(original_color: u32, color_under_pixel: u32) -> u32`
-pub fn draw_text_antialiased_execute_at<const SAFE: bool>(
+pub fn draw_text_antialiased_execute_at<const SAFE: bool, T: crate::GlyphCache>(
     buffer: &mut (impl BufferPointers + BufferMetrics + BufferGetPixel),
     text: &str,
     xy: (usize, usize),
     color: u32,
-    size: f32,
-    font: &fontdue::Font,
+    size: GlyphSize,
+    glyph_cache: &mut T,
     function: impl Fn(u32, u32) -> u32,
 ) {
     let mut pen_x = xy.0 as f32;
     let pen_y = xy.1;
 
-    let ascent = font
-        .horizontal_line_metrics(size)
+    let ascent = glyph_cache
+        .get_font()
+        .horizontal_line_metrics(size.inner())
         .map_or(0, |font_metrics| font_metrics.ascent as usize);
 
     for ch in text.chars() {
         // Try to get the glyph from cache first
-        let char = get_character(ch, size, font);
+        let char = glyph_cache.get_or_insert(Glyph::new(ch, size, color));
         let metrics = char.0;
         let bitmap = &char.1;
 
@@ -131,8 +128,7 @@ pub fn draw_text_antialiased_execute_at<const SAFE: bool>(
             for gx in 0..metrics.width {
                 let px = pen_x as usize + gx;
                 // Correcting for letter height
-                let py =
-                    ((pen_y + gy + offset_y) as i32 - metrics.ymin) as usize;
+                let py = ((pen_y + gy + offset_y) as i32 - metrics.ymin) as usize;
 
                 if px < buffer.width() && py < buffer.height() {
                     let index = py * buffer.width() + px;
@@ -160,20 +156,16 @@ pub fn draw_text_antialiased_execute_at<const SAFE: bool>(
                             let inv_alpha: u8 = 255 - alpha;
                             let nr = ((tr as u16 * u16::from(alpha)
                                 + br as u16 * u16::from(inv_alpha))
-                                / 255)
-                                as u8;
+                                / 255) as u8;
                             let ng = ((tg as u16 * u16::from(alpha)
                                 + bg as u16 * u16::from(inv_alpha))
-                                / 255)
-                                as u8;
+                                / 255) as u8;
                             let nb = ((tb as u16 * u16::from(alpha)
                                 + bb as u16 * u16::from(inv_alpha))
-                                / 255)
-                                as u8;
+                                / 255) as u8;
                             let na = ((ta as u16 * u16::from(alpha)
                                 + ba as u16 * u16::from(inv_alpha))
-                                / 255)
-                                as u8;
+                                / 255) as u8;
                             let new = u32::from(nr) << 24
                                 | u32::from(ng) << 16
                                 | u32::from(nb) << 8
@@ -196,23 +188,24 @@ pub fn draw_text_antialiased_execute_at<const SAFE: bool>(
 }
 
 /// Draw text yet stretch the resulting characters
-pub fn draw_text_antialiased_stretched<const SAFE: bool>(
+pub fn draw_text_antialiased_stretched<const SAFE: bool, T: crate::GlyphCache>(
     buffer: &mut (impl BufferPointers + BufferMetrics + BufferGetPixel),
     text: &str,
     xy: (usize, usize),
     color: u32,
-    size: f32,
-    font: &fontdue::Font,
+    size: GlyphSize,
+    glyph_cache: &mut T,
     stretch: (f32, f32),
 ) {
     let mut pen_x = xy.0 as f32;
     let pen_y = xy.1;
-    let ascent = font
-        .horizontal_line_metrics(size)
+    let ascent = glyph_cache
+        .get_font()
+        .horizontal_line_metrics(size.inner())
         .map_or(0, |font_metrics| font_metrics.ascent as usize);
 
     for ch in text.chars() {
-        let char = get_character(ch, size, font);
+        let char = glyph_cache.get_or_insert(Glyph::new(ch, size, color));
         let metrics = char.0;
         let bitmap = &char.1;
 
@@ -227,16 +220,14 @@ pub fn draw_text_antialiased_stretched<const SAFE: bool>(
                 continue;
             }
 
-            let bitmap_row_start =
-                ((gy as f32 / stretch.1) as usize) * metrics.width;
+            let bitmap_row_start = ((gy as f32 / stretch.1) as usize) * metrics.width;
             for gx in 0..w.floor() as usize {
                 let px = pen_x as usize + gx;
                 if px >= buffer.width() {
                     continue;
                 }
 
-                let bitmap_index =
-                    bitmap_row_start + (gx as f32 / stretch.0) as usize;
+                let bitmap_index = bitmap_row_start + (gx as f32 / stretch.0) as usize;
                 let alpha = bitmap[bitmap_index];
 
                 if alpha > 0 {
@@ -257,17 +248,13 @@ pub fn draw_text_antialiased_stretched<const SAFE: bool>(
 
                     // Alpha blending
                     let inv_alpha: u8 = 255 - alpha;
-                    let nr = ((tr as u16 * u16::from(alpha)
-                        + br as u16 * u16::from(inv_alpha))
+                    let nr = ((tr as u16 * u16::from(alpha) + br as u16 * u16::from(inv_alpha))
                         / 255) as u8;
-                    let ng = ((tg as u16 * u16::from(alpha)
-                        + bg_g as u16 * u16::from(inv_alpha))
+                    let ng = ((tg as u16 * u16::from(alpha) + bg_g as u16 * u16::from(inv_alpha))
                         / 255) as u8;
-                    let nb = ((tb as u16 * u16::from(alpha)
-                        + bb as u16 * u16::from(inv_alpha))
+                    let nb = ((tb as u16 * u16::from(alpha) + bb as u16 * u16::from(inv_alpha))
                         / 255) as u8;
-                    let na = ((ta as u16 * u16::from(alpha)
-                        + ba as u16 * u16::from(inv_alpha))
+                    let na = ((ta as u16 * u16::from(alpha) + ba as u16 * u16::from(inv_alpha))
                         / 255) as u8;
 
                     let new = u32::from(nr) << 24
@@ -289,24 +276,25 @@ pub fn draw_text_antialiased_stretched<const SAFE: bool>(
 }
 
 /// Same as [`draw_text_antialiased`] but uses isize for positioning allowing for partially out of bounds text (left and top)
-pub fn draw_text_antialiased_isize<const SAFE: bool>(
+pub fn draw_text_antialiased_isize<const SAFE: bool, T: crate::GlyphCache>(
     buffer: &mut (impl BufferPointers + BufferMetrics),
     text: &str,
     xy: (isize, isize),
     color: u32,
-    size: f32,
-    font: &fontdue::Font,
+    size: GlyphSize,
+    glyph_cache: &mut T,
 ) {
     let mut pen_x = xy.0 as f32;
     let pen_y = xy.1;
 
-    let ascent = font
-        .horizontal_line_metrics(size)
+    let ascent = glyph_cache
+        .get_font()
+        .horizontal_line_metrics(size.inner())
         .map_or(0, |font_metrics| font_metrics.ascent as isize);
 
     for ch in text.chars() {
         // Try to get the glyph from cache first
-        let char = get_character(ch, size, font);
+        let char = glyph_cache.get_or_insert(Glyph::new(ch, size, color));
         let metrics = char.0;
         let bitmap = &char.1;
 
@@ -353,20 +341,16 @@ pub fn draw_text_antialiased_isize<const SAFE: bool>(
                             let inv_alpha: u8 = 255 - alpha;
                             let nr = ((tr as u16 * u16::from(alpha)
                                 + br as u16 * u16::from(inv_alpha))
-                                / 255)
-                                as u8;
+                                / 255) as u8;
                             let ng = ((tg as u16 * u16::from(alpha)
                                 + bg as u16 * u16::from(inv_alpha))
-                                / 255)
-                                as u8;
+                                / 255) as u8;
                             let nb = ((tb as u16 * u16::from(alpha)
                                 + bb as u16 * u16::from(inv_alpha))
-                                / 255)
-                                as u8;
+                                / 255) as u8;
                             let na = ((ta as u16 * u16::from(alpha)
                                 + ba as u16 * u16::from(inv_alpha))
-                                / 255)
-                                as u8;
+                                / 255) as u8;
                             if SAFE {
                                 draw_pixel_safe(
                                     buffer,
@@ -398,23 +382,24 @@ pub fn draw_text_antialiased_isize<const SAFE: bool>(
 }
 
 /// Same as [`draw_text_antialiased_stretched`] but uses isize for positioning allowing for partially out of bounds text (left and top)
-pub fn draw_text_antialiased_stretched_isize<const SAFE: bool>(
+pub fn draw_text_antialiased_stretched_isize<const SAFE: bool, T: crate::GlyphCache>(
     buffer: &mut (impl BufferPointers + BufferMetrics + BufferGetPixel),
     text: &str,
     xy: (isize, isize),
     color: u32,
-    size: f32,
-    font: &fontdue::Font,
+    size: GlyphSize,
+    glyph_cache: &mut T,
     stretch: (f32, f32),
 ) {
     let mut pen_x = xy.0 as f32;
     let pen_y = xy.1;
-    let ascent = font
-        .horizontal_line_metrics(size)
+    let ascent = glyph_cache
+        .get_font()
+        .horizontal_line_metrics(size.inner())
         .map_or(0, |font_metrics| font_metrics.ascent as isize);
 
     for ch in text.chars() {
-        let char = get_character(ch, size, font);
+        let char = glyph_cache.get_or_insert(Glyph::new(ch, size, color));
         let metrics = char.0;
         let bitmap = &char.1;
 
@@ -429,16 +414,14 @@ pub fn draw_text_antialiased_stretched_isize<const SAFE: bool>(
                 continue;
             }
 
-            let bitmap_row_start =
-                ((gy as f32 / stretch.1) as usize) * metrics.width;
+            let bitmap_row_start = ((gy as f32 / stretch.1) as usize) * metrics.width;
             for gx in 0..w.floor() as usize {
                 let px = pen_x as isize + gx as isize;
                 if px < 0 || px >= buffer.width() as isize {
                     continue;
                 }
 
-                let bitmap_index =
-                    bitmap_row_start + (gx as f32 / stretch.0) as usize;
+                let bitmap_index = bitmap_row_start + (gx as f32 / stretch.0) as usize;
                 let alpha = bitmap[bitmap_index];
 
                 if alpha > 0 {
@@ -467,17 +450,13 @@ pub fn draw_text_antialiased_stretched_isize<const SAFE: bool>(
 
                     // Alpha blending
                     let inv_alpha: u8 = 255 - alpha;
-                    let nr = ((tr as u16 * u16::from(alpha)
-                        + br as u16 * u16::from(inv_alpha))
+                    let nr = ((tr as u16 * u16::from(alpha) + br as u16 * u16::from(inv_alpha))
                         / 255) as u8;
-                    let ng = ((tg as u16 * u16::from(alpha)
-                        + bg_g as u16 * u16::from(inv_alpha))
+                    let ng = ((tg as u16 * u16::from(alpha) + bg_g as u16 * u16::from(inv_alpha))
                         / 255) as u8;
-                    let nb = ((tb as u16 * u16::from(alpha)
-                        + bb as u16 * u16::from(inv_alpha))
+                    let nb = ((tb as u16 * u16::from(alpha) + bb as u16 * u16::from(inv_alpha))
                         / 255) as u8;
-                    let na = ((ta as u16 * u16::from(alpha)
-                        + ba as u16 * u16::from(inv_alpha))
+                    let na = ((ta as u16 * u16::from(alpha) + ba as u16 * u16::from(inv_alpha))
                         / 255) as u8;
 
                     let new = u32::from(nr) << 24
@@ -486,17 +465,9 @@ pub fn draw_text_antialiased_stretched_isize<const SAFE: bool>(
                         | u32::from(na);
 
                     if SAFE {
-                        draw_pixel_safe(
-                            buffer,
-                            (px as usize, py as usize),
-                            new,
-                        );
+                        draw_pixel_safe(buffer, (px as usize, py as usize), new);
                     } else {
-                        draw_pixel_unsafe(
-                            buffer,
-                            (px as usize, py as usize),
-                            new,
-                        );
+                        draw_pixel_unsafe(buffer, (px as usize, py as usize), new);
                     }
                 }
             }
