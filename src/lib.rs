@@ -9,7 +9,7 @@
 #![feature(portable_simd)]
 // Core
 // #![cfg_attr(feature = "font_support", feature(core_intrinsics))]
-#![feature(share_trait)]
+// #![feature(share_trait)]
 
 /// Other functions/structs like 3D points and Polygons
 pub mod extra;

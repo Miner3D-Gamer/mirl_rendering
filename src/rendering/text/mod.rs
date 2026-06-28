@@ -1,7 +1,5 @@
 // I despise how much duplicate code is present in the text rendering functions
 
-use std::clone::Share;
-
 // use mirl::settings::SettingsMapType;
 use mirl_extensions::{IntoPatch, MapLike};
 use parking_lot::RwLock;
@@ -171,7 +169,7 @@ impl<HashMap: MapLike<Glyph, std::sync::Arc<GlyphData>> + Clone> GlyphCache
         let lock = self._cache.get_mut();
         let rasterized = self._font.rasterize(glyph.char, glyph.size._size);
         let arc = std::sync::Arc::new(rasterized);
-        lock.insert(glyph, arc.share());
+        lock.insert(glyph, arc.clone());
         arc
     }
 
@@ -181,7 +179,7 @@ impl<HashMap: MapLike<Glyph, std::sync::Arc<GlyphData>> + Clone> GlyphCache
 
     fn get<'a>(&self, glyph: Glyph) -> Option<std::sync::Arc<GlyphData>> {
         let lock = self._cache.read();
-        lock.get(&glyph).map(std::clone::Share::share)
+        lock.get(&glyph).map(std::clone::Clone::clone)
     }
     fn get_font(&self) -> &fontdue::Font {
         &self._font
