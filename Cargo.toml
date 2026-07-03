@@ -4,46 +4,6 @@ version = "0.0.0-alpha"
 edition.workspace = true
 repository.workspace = true
 
-[dependencies]
-
-mirl_extensions = { version = "0.0.0-alpha" }
-# mirl_core = { version = "0.0.0-alpha" }
-# mirl = { version = "10.0.0-alpha" }
-mirl_buffer = { version = "0.0.0-alpha" }
-mirl_graphics = { version = "0.0.0-alpha" }
-mirl_buffer_interpolation = { version = "0.0.0-alpha" }
-
-mirl_derive = { version = "0.0.0-alpha", optional = true }
-# Codec
-compactly = { version = "0.1.6", optional = true }
-serde = { version = ">=1.0", optional = true, default-features = false, features = [
-    "derive",
-] }
-bitcode = { version = "0.6.9", optional = true, default-features = false, features = [
-    "derive",
-] }
-wincode = { version = "0.5.3", optional = true, features = ["derive"] }
-zerocopy = { version = "0.8.48", optional = true, default-features = false, features = [
-    "float-nightly",
-    "derive",
-] }
-
-# # Enum functionality
-# strum = { version = ">=0.28", optional = true, default-features = false, features = [
-#     "derive",
-# ] }
-# enum_ext = { version = "0.6.0", optional = true, default-features = false }
-
-
-# Text rendering
-## Needed for glyph cache
-once_cell = { version = ">=1.4", optional = true, default-features = false }
-## Font lib
-fontdue = { version = ">=0.9.3", optional = true, default-features = false }
-# For locking/releasing a global variable
-# TODO: Find something even faster for this application rather than this general purpose crate
-parking_lot = { version = ">=0.12.5", optional = true, default-features = false }
-
 [features]
 default = ["std"]
 std = []
@@ -77,7 +37,43 @@ font_support = [
     "dep:parking_lot",
 ]
 _checking = ["font_support"]
-[lints]
-workspace = true
+
+[dependencies]
+bitcode = { version = "0.6", optional = true, default-features = false, features = [
+    "derive",
+] }
+# Codec
+compactly = { version = "0.1", optional = true }
+## Font lib
+fontdue = { version = "0.9", optional = true, default-features = false }
+# mirl_core = { version = "0.0.0-alpha" }
+# mirl = { version = "10.0.0-alpha" }
+mirl_buffer = { version = "0.0.0-alpha" }
+mirl_buffer_interpolation = { version = "0.0.0-alpha" }
+
+mirl_derive = { version = "0.0.0-alpha", optional = true }
+
+mirl_extensions = { version = "0.0.0-alpha" }
+mirl_graphics = { version = "0.0.0-alpha" }
+# # Enum functionality# strum = { version = "0.28", optional = true, default-features = false, features = [#     "derive",# ] }
+# enum_ext = { version = "0.6", optional = true, default-features = false }
+
+
+# Text rendering
+## Needed for glyph cache
+once_cell = { version = "1.21", optional = true, default-features = false }
+# For locking/releasing a global variable
+# TODO: Find something even faster for this application rather than this general purpose crate
+parking_lot = { version = "0.12", optional = true, default-features = false }
+serde = { version = "1", optional = true, default-features = false, features = [
+    "derive",
+] }
+wincode = { version = "0.5", optional = true, features = ["derive"] }
+zerocopy = { version = "0.8", optional = true, default-features = false, features = [
+    "float-nightly",
+    "derive",
+] }
 [build-dependencies]
 mirl_build_tools = { workspace = true }
+[lints]
+workspace = true
