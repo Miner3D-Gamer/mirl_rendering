@@ -47,17 +47,9 @@ pub fn draw_line<const SAFE: bool>(
                         let new_x = start_x + dx;
                         let new_y = start_y + dy;
                         if SAFE {
-                            draw_pixel_safe(
-                                buffer,
-                                (new_x as usize, new_y as usize),
-                                color,
-                            );
+                            draw_pixel_safe(buffer, (new_x as usize, new_y as usize), color);
                         } else {
-                            draw_pixel_unsafe(
-                                buffer,
-                                (new_x as usize, new_y as usize),
-                                color,
-                            );
+                            draw_pixel_unsafe(buffer, (new_x as usize, new_y as usize), color);
                         }
                     }
                 }
@@ -79,17 +71,9 @@ pub fn draw_line<const SAFE: bool>(
                         let new_x = start_x + dx;
                         let new_y = start_y + dy;
                         if SAFE {
-                            draw_pixel_safe(
-                                buffer,
-                                (new_x as usize, new_y as usize),
-                                color,
-                            );
+                            draw_pixel_safe(buffer, (new_x as usize, new_y as usize), color);
                         } else {
-                            draw_pixel_unsafe(
-                                buffer,
-                                (new_x as usize, new_y as usize),
-                                color,
-                            );
+                            draw_pixel_unsafe(buffer, (new_x as usize, new_y as usize), color);
                         }
                     }
                 }
@@ -118,17 +102,9 @@ pub fn draw_line_straight<const SAFE: bool>(
         for y in start_y..start_y + length as isize {
             for offset_x in -half_thickness..=half_thickness {
                 if SAFE {
-                    draw_pixel_safe(
-                        buffer,
-                        ((start_x + offset_x) as usize, y as usize),
-                        color,
-                    );
+                    draw_pixel_safe(buffer, ((start_x + offset_x) as usize, y as usize), color);
                 } else {
-                    draw_pixel_unsafe(
-                        buffer,
-                        ((start_x + offset_x) as usize, y as usize),
-                        color,
-                    );
+                    draw_pixel_unsafe(buffer, ((start_x + offset_x) as usize, y as usize), color);
                 }
             }
         }
@@ -136,17 +112,9 @@ pub fn draw_line_straight<const SAFE: bool>(
         for x in start_x..start_x + length as isize {
             for offset_y in -half_thickness..=half_thickness {
                 if SAFE {
-                    draw_pixel_safe(
-                        buffer,
-                        (x as usize, (start_y + offset_y) as usize),
-                        color,
-                    );
+                    draw_pixel_safe(buffer, (x as usize, (start_y + offset_y) as usize), color);
                 } else {
-                    draw_pixel_unsafe(
-                        buffer,
-                        (x as usize, (start_y + offset_y) as usize),
-                        color,
-                    );
+                    draw_pixel_unsafe(buffer, (x as usize, (start_y + offset_y) as usize), color);
                 }
             }
         }

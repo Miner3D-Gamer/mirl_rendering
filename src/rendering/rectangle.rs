@@ -44,10 +44,8 @@ pub fn draw_rectangle<const SAFE: bool>(
         // Calculate actual drawable bounds
         let start_x = pos.0.max(0) as usize;
         let start_y = pos.1.max(0) as usize;
-        let end_x =
-            ((pos.0 + size.0).min(buffer.width() as isize)).max(0) as usize;
-        let end_y =
-            ((pos.1 + size.1).min(buffer.height() as isize)).max(0) as usize;
+        let end_x = ((pos.0 + size.0).min(buffer.width() as isize)).max(0) as usize;
+        let end_y = ((pos.1 + size.1).min(buffer.height() as isize)).max(0) as usize;
 
         if start_x >= buffer.width()
             || start_y >= buffer.height()
@@ -170,25 +168,15 @@ pub fn draw_rectangle_angled<const SAFE: bool>(
             let rotated_x = rel_x.mul_add(cos_theta, -(rel_y * sin_theta));
             let rotated_y = rel_x.mul_add(sin_theta, rel_y * cos_theta);
 
-            let final_x =
-                (pos.0 as f32 + rotated_x + anchor_x_offset).round() as isize;
-            let final_y =
-                (pos.1 as f32 + rotated_y + anchor_y_offset).round() as isize;
+            let final_x = (pos.0 as f32 + rotated_x + anchor_x_offset).round() as isize;
+            let final_y = (pos.1 as f32 + rotated_y + anchor_y_offset).round() as isize;
 
             if SAFE {
                 if final_x >= 0 && final_y >= 0 {
-                    draw_pixel_safe(
-                        buffer,
-                        (final_x as usize, final_y as usize),
-                        color,
-                    );
+                    draw_pixel_safe(buffer, (final_x as usize, final_y as usize), color);
                 }
             } else {
-                draw_pixel_unsafe(
-                    buffer,
-                    (final_x as usize, final_y as usize),
-                    color,
-                );
+                draw_pixel_unsafe(buffer, (final_x as usize, final_y as usize), color);
             }
         }
     }

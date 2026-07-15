@@ -26,17 +26,9 @@ pub fn draw_circle<const SAFE: bool, const FIX_STRAY_PIXEL: bool>(
 
             if x_pos >= 0 && y_pos >= 0 {
                 if SAFE {
-                    draw_pixel_safe(
-                        buffer,
-                        (x_pos as usize, y_pos as usize),
-                        color,
-                    );
+                    draw_pixel_safe(buffer, (x_pos as usize, y_pos as usize), color);
                 } else {
-                    draw_pixel_unsafe(
-                        buffer,
-                        (x_pos as usize, y_pos as usize),
-                        color,
-                    );
+                    draw_pixel_unsafe(buffer, (x_pos as usize, y_pos as usize), color);
                 }
             }
         }

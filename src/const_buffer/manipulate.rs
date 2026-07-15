@@ -16,8 +16,7 @@ pub trait TempConstBufferRotate {
     fn rotated_270(&self) -> Self::Rotated;
 }
 
-impl<const WIDTH: usize, const HEIGHT: usize> TempConstBufferRotate
-    for ConstBuffer<WIDTH, HEIGHT>
+impl<const WIDTH: usize, const HEIGHT: usize> TempConstBufferRotate for ConstBuffer<WIDTH, HEIGHT>
 where
     [(); WIDTH * HEIGHT]:,
     [(); HEIGHT * WIDTH]:,

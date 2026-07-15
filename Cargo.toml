@@ -6,25 +6,94 @@ repository.workspace = true
 
 [features]
 default = ["std"]
-std = []
-all = ["all_codecs", "font_support"]
+std = [
+    "bitcode?/std",
+    "fontdue?/std",
+    "mirl_buffer/std",
+    "mirl_buffer_interpolation/std",
+    "mirl_extensions/std",
+    "mirl_graphics/std",
+    "once_cell?/std",
+    "serde?/std",
+    "wincode?/std",
+    "zerocopy?/std",
+]
+all = [
+    "all_codecs",
+    "font_support",
+    "mirl_buffer/all",
+    "mirl_extensions/all",
+    "mirl_graphics/all",
+]
 # Does nothing by itself. Needs another codec or enum flag to do something
-mirl_derive = ["dep:mirl_derive"]
+mirl_derive = [
+    "dep:mirl_derive",
+    "mirl_buffer/mirl_derive",
+    "mirl_buffer_interpolation/mirl_derive",
+    "mirl_graphics/mirl_derive",
+]
 # Compatibility with ffi
-c_compatible = ["mirl_derive"]
+c_compatible = [
+    "dep:mirl_derive",
+    "mirl_buffer/c_compatible",
+    "mirl_buffer_interpolation/c_compatible",
+    "mirl_extensions/c_compatible",
+    "mirl_graphics/c_compatible",
+]
 # Enables all codecs
-all_codecs = ["serde", "bitcode", "wincode", "compactly", "zerocopy"]
+all_codecs = [
+    "dep:serde",
+    "dep:bitcode",
+    "dep:wincode",
+    "dep:compactly",
+    "dep:zerocopy",
+    "mirl_buffer/all_codecs",
+    "mirl_buffer_interpolation/all_codecs",
+    "mirl_graphics/all_codecs",
+]
 # # All enum extensions# all_enum_extensions = ["strum", "enum_ext"]
 # Codec stuff
-serde = ["dep:serde", "mirl_derive"]
-bitcode = ["dep:bitcode", "mirl_derive"]
-wincode = ["dep:wincode", "mirl_derive"]
-compactly = ["dep:compactly", "mirl_derive"]
-zerocopy = ["dep:zerocopy", "mirl_derive"]
+serde = [
+    "dep:serde",
+    "dep:mirl_derive",
+    "bitcode?/serde",
+    "mirl_buffer/serde",
+    "mirl_buffer_interpolation/serde",
+    "mirl_graphics/serde",
+    "parking_lot?/serde",
+]
+bitcode = [
+    "dep:bitcode",
+    "dep:mirl_derive",
+    "mirl_buffer/bitcode",
+    "mirl_buffer_interpolation/bitcode",
+    "mirl_graphics/bitcode",
+]
+wincode = [
+    "dep:wincode",
+    "dep:mirl_derive",
+    "mirl_buffer/wincode",
+    "mirl_buffer_interpolation/wincode",
+    "mirl_graphics/wincode",
+]
+compactly = [
+    "dep:compactly",
+    "dep:mirl_derive",
+    "mirl_buffer/compactly",
+    "mirl_buffer_interpolation/compactly",
+    "mirl_graphics/compactly",
+]
+zerocopy = [
+    "dep:zerocopy",
+    "dep:mirl_derive",
+    "mirl_buffer/zerocopy",
+    "mirl_buffer_interpolation/zerocopy",
+    "mirl_graphics/zerocopy",
+]
 # # Enum extensions
 # strum = ["dep:strum", "mirl_derive"]
 # enum_ext = ["dep:enum_ext", "mirl_derive"]
-# Font/fontdue support
+# Font?/fontdue support
 font_support = [
     "dep:fontdue",
     "dep:once_cell",
@@ -53,7 +122,7 @@ mirl_graphics = { version = "0.0.0-alpha" }
 # Text rendering
 ## Needed for glyph cache
 once_cell = { version = "1.21", optional = true, default-features = false }
-# For locking/releasing a global variable
+# For locking?/releasing a global variable
 # TODO: Find something even faster for this application rather than this general purpose crate
 parking_lot = { version = "0.12", optional = true, default-features = false }
 serde = { version = "1.0", optional = true, default-features = false, features = [

@@ -24,12 +24,7 @@ pub fn draw_buffer_on_buffer_stretched<
     result_dimensions: (usize, usize),
     interpolation_mode: InterpolationMode,
 ) {
-    draw_buffer_on_buffer::<
-        SAFE,
-        TRANSPARENCY,
-        TRANSPARENCY_INTERPOLATION,
-        NICHE_TRANSPARENCY_CHECK,
-    >(
+    draw_buffer_on_buffer::<SAFE, TRANSPARENCY, TRANSPARENCY_INTERPOLATION, NICHE_TRANSPARENCY_CHECK>(
         canvas,
         &texture.resize_content(result_dimensions, interpolation_mode),
         position,
@@ -125,16 +120,8 @@ pub fn draw_buffer_on_buffer<
     position: (isize, isize),
 ) {
     // Calculate the visible rectangle in canvas coordinates
-    let canvas_start_x = if SAFE {
-        position.0.max(0)
-    } else {
-        position.0
-    };
-    let canvas_start_y = if SAFE {
-        position.1.max(0)
-    } else {
-        position.1
-    };
+    let canvas_start_x = if SAFE { position.0.max(0) } else { position.0 };
+    let canvas_start_y = if SAFE { position.1.max(0) } else { position.1 };
     let canvas_end_x = if SAFE {
         (position.0 + texture.width() as isize).min(canvas.width() as isize)
     } else {
@@ -147,9 +134,7 @@ pub fn draw_buffer_on_buffer<
     };
 
     // Early exit if no visible area
-    if SAFE
-        && (canvas_start_x >= canvas_end_x || canvas_start_y >= canvas_end_y)
-    {
+    if SAFE && (canvas_start_x >= canvas_end_x || canvas_start_y >= canvas_end_y) {
         return;
     }
 
@@ -160,13 +145,10 @@ pub fn draw_buffer_on_buffer<
     // Iterate only over the visible area
     for canvas_y in canvas_start_y..canvas_end_y {
         for canvas_x in canvas_start_x..canvas_end_x {
-            let texture_x =
-                texture_start_x + (canvas_x - canvas_start_x) as usize;
-            let texture_y =
-                texture_start_y + (canvas_y - canvas_start_y) as usize;
+            let texture_x = texture_start_x + (canvas_x - canvas_start_x) as usize;
+            let texture_y = texture_start_y + (canvas_y - canvas_start_y) as usize;
 
-            let pixel =
-                unsafe { texture.get_pixel_unchecked((texture_x, texture_y)) };
+            let pixel = unsafe { texture.get_pixel_unchecked((texture_x, texture_y)) };
 
             if TRANSPARENCY {
                 let trans = pixel.alpha();
@@ -182,38 +164,21 @@ pub fn draw_buffer_on_buffer<
                     } else {
                         unsafe {
                             canvas
-                                .get_pixel_unchecked((
-                                    canvas_x as usize,
-                                    canvas_y as usize,
-                                ))
-                                .interpolate_color_with(
-                                    pixel,
-                                    trans as f32 / 255.0,
-                                )
+                                .get_pixel_unchecked((canvas_x as usize, canvas_y as usize))
+                                .interpolate_color_with(pixel, trans as f32 / 255.0)
                         }
                     }
                 } else if trans != 0 {
                     pixel
                 } else {
-                    unsafe {
-                        canvas.get_pixel_unchecked((
-                            canvas_x as usize,
-                            canvas_y as usize,
-                        ))
-                    }
+                    unsafe { canvas.get_pixel_unchecked((canvas_x as usize, canvas_y as usize)) }
                 };
                 unsafe {
-                    canvas.set_pixel_unchecked(
-                        (canvas_x as usize, canvas_y as usize),
-                        color,
-                    );
+                    canvas.set_pixel_unchecked((canvas_x as usize, canvas_y as usize), color);
                 }
             } else {
                 unsafe {
-                    canvas.set_pixel_unchecked(
-                        (canvas_x as usize, canvas_y as usize),
-                        pixel,
-                    );
+                    canvas.set_pixel_unchecked((canvas_x as usize, canvas_y as usize), pixel);
                 }
             }
         }

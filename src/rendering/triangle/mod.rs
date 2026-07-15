@@ -19,12 +19,9 @@ pub fn draw_triangle(
     let mut vertices = [point1, point2, point3];
     vertices.sort_by_key(|a| a.1);
 
-    let (x1, y1, u1, v1) =
-        (vertices[0].0, vertices[0].1, vertices[0].2, vertices[0].3);
-    let (x2, y2, u2, v2) =
-        (vertices[1].0, vertices[1].1, vertices[1].2, vertices[1].3);
-    let (x3, y3, u3, v3) =
-        (vertices[2].0, vertices[2].1, vertices[2].2, vertices[2].3);
+    let (x1, y1, u1, v1) = (vertices[0].0, vertices[0].1, vertices[0].2, vertices[0].3);
+    let (x2, y2, u2, v2) = (vertices[1].0, vertices[1].1, vertices[1].2, vertices[1].3);
+    let (x3, y3, u3, v3) = (vertices[2].0, vertices[2].1, vertices[2].2, vertices[2].3);
 
     let mut x_start;
     let mut x_end;
@@ -41,12 +38,8 @@ pub fn draw_triangle(
 
         if y < y2 {
             // Top half of triangle
-            x_start = uv_interpolate(
-                y as f32, y1 as f32, x1 as f32, y2 as f32, x2 as f32,
-            );
-            x_end = uv_interpolate(
-                y as f32, y1 as f32, x1 as f32, y3 as f32, x3 as f32,
-            );
+            x_start = uv_interpolate(y as f32, y1 as f32, x1 as f32, y2 as f32, x2 as f32);
+            x_end = uv_interpolate(y as f32, y1 as f32, x1 as f32, y3 as f32, x3 as f32);
 
             u_start = uv_interpolate(y as f32, y1 as f32, u1, y2 as f32, u2);
             u_end = uv_interpolate(y as f32, y1 as f32, u1, y3 as f32, u3);
@@ -54,12 +47,8 @@ pub fn draw_triangle(
             v_start = uv_interpolate(y as f32, y1 as f32, v1, y2 as f32, v2);
         } else {
             // Bottom half of triangle
-            x_start = uv_interpolate(
-                y as f32, y2 as f32, x2 as f32, y3 as f32, x3 as f32,
-            );
-            x_end = uv_interpolate(
-                y as f32, y1 as f32, x1 as f32, y3 as f32, x3 as f32,
-            );
+            x_start = uv_interpolate(y as f32, y2 as f32, x2 as f32, y3 as f32, x3 as f32);
+            x_end = uv_interpolate(y as f32, y1 as f32, x1 as f32, y3 as f32, x3 as f32);
 
             u_start = uv_interpolate(y as f32, y2 as f32, u2, y3 as f32, u3);
             u_end = uv_interpolate(y as f32, y1 as f32, u1, y3 as f32, u3);
